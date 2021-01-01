@@ -1,0 +1,13 @@
+node_modules
+*.log
+release
+dev/data
+
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+.idea/dataSources
+.idea/dataSources.xml
+.idea/dataSources.*.xml
