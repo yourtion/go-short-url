@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 )
 
+// MD5 hash 散列
 func MD5(str string) string {
-	// 实现hash散列
 	h := md5.New()
 	h.Write([]byte(str))
 	hashed := h.Sum(nil)

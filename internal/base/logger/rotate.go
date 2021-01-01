@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// 日志轮转
 type RotateWriter struct {
 	lock     sync.Mutex
 	path     string // should be set to the actual filename

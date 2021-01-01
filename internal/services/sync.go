@@ -14,14 +14,17 @@ import (
 // Redis同步到数据库后自动设置过期
 const ExpireTime = 60 * 24 * time.Hour
 
+// 获取 pv Redis Key
 func getPvKey(day string) string {
 	return redis.GetKey(strings.Join([]string{day, "pv"}, ":"))
 }
 
+// 获取 uv Redis Key
 func getUvKey(day string) string {
 	return redis.GetKey(strings.Join([]string{day, "uv"}, ":"))
 }
 
+// 本地数据写入 Redis
 func SyncToRedis(clean bool) {
 	if redis.Client == nil {
 		return
@@ -37,15 +40,16 @@ func SyncToRedis(clean bool) {
 	// 使用 sync.Map 的 Range 方法遍历
 	statics.Range(func(id interface{}, data interface{}) bool {
 		pv := data.(*sInfo).pv.Get()
+		field := strconv.Itoa(id.(int))
 		if pv > 0 {
 			data.(*sInfo).pv.Reset()
-			pipe.HIncrBy(pvKey, strconv.Itoa(id.(int)), pv)
+			pipe.HIncrBy(pvKey, field, pv)
 			pvI++
 		}
 		uv := data.(*sInfo).uv.Get()
 		if uv > 0 {
 			data.(*sInfo).uv.Reset()
-			pipe.HIncrBy(uvKey, strconv.Itoa(id.(int)), pv)
+			pipe.HIncrBy(uvKey, field, pv)
 			uvI++
 		}
 		// 删除空白的统计
@@ -61,6 +65,7 @@ func SyncToRedis(clean bool) {
 	log.Tracef("SyncToRedisDone %s:%d - %s:%d", pvKey, pvI, uvKey, uvI)
 }
 
+// 将 AccessLog 刷盘（同时触发轮转）
 func FlushAccessLog() {
 	day := utils.GetTodayDayString()
 	log.Tracef("FlushAccessLog: %s", day)
@@ -75,6 +80,7 @@ type infoPvUv struct {
 	uv int
 }
 
+// 解析 Redis 返回 Map 信息
 func parseMapInfo(key string, val string) (int, int, error) {
 	id, err := strconv.Atoi(key)
 	if err != nil {
@@ -87,6 +93,7 @@ func parseMapInfo(key string, val string) (int, int, error) {
 	return id, v, nil
 }
 
+// 将 Redis 信息写入数据库
 func SyncToDB(yesterday string) {
 	dbInfo := make(map[int]*infoPvUv)
 
@@ -126,7 +133,7 @@ func SyncToDB(yesterday string) {
 			allOk = false
 		}
 	}
-	// 如果写入成功，设置RedisKey过期
+	// 如果写入成功，设置 RedisKey 过期（不直接删除，便于排查）
 	if allOk {
 		redis.Client.Expire(getPvKey(yesterday), ExpireTime)
 		redis.Client.Expire(getUvKey(yesterday), ExpireTime)

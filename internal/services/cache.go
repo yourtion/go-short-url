@@ -17,8 +17,9 @@ var shortCache *cache.LRU
 var shortMemo *memo.Memo
 var accessLog *logger.RotateWriter
 
+// 初始化 Cache 信息
 func CacheInit() {
-	// TODO: 配置AccessLog路径
+	// TODO: 配置 AccessLog 路径
 	accessLog = logger.NewRotateWriter("/tmp", utils.GetTodayDayString())
 	// TODO: 通过配置获取缓存时间
 	shortCache = cache.NewLRU(1024, 60*time.Second)
@@ -56,7 +57,7 @@ func GetOriginUrlFromShort(short string) (*define.ShortRow, bool) {
 		return shortInfo.(*define.ShortRow), true
 	}
 
-	// 缓存空结果（防止缓存穿透导致DDos）
+	// 缓存空结果（防止缓存穿透）
 	// TODO: 通过配置获取缓存时间
 	shortCache.SetEx(short, &define.ShortRow{}, 10*time.Second)
 	return nil, false

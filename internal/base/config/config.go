@@ -1,3 +1,4 @@
+// 配置中心
 package config
 
 import (
@@ -7,13 +8,18 @@ import (
 )
 
 var log *logger.Entry
+
+// 核心配置（通过配置文件加载）
 var Config MainConfig
+
+// 动态配置（通过数据库 config 表加载）
 var Dynamic DynamicInfo
 
 func init() {
 	log = logger.NewModuleLogger("config")
 }
 
+// 加载配置文件
 func LoadConfig(workingDir string, file string) {
 	log.Infof("load config from file: %s", file)
 	_, err := toml.DecodeFile(file, &Config)

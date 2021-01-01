@@ -6,7 +6,7 @@ import (
 	"github.com/yourtion/go-short-url/internal/utils"
 )
 
-// 从Short表中查一条数据
+// 从 Short 表中查一条数据
 func getOneFromShort(sql string, params ...interface{}) *define.ShortRow {
 	row := new(define.ShortRow)
 	ok := mysql.FindOne(nil, row, sql, params...)
@@ -16,7 +16,7 @@ func getOneFromShort(sql string, params ...interface{}) *define.ShortRow {
 	return nil
 }
 
-// 通过hash查询短链接是否存在
+// 通过 hash 查询短链接是否存在
 func getShortInfoByHash(hash string) *define.ShortRow {
 	return getOneFromShort("SELECT `id`,`short`,`is_statistics`,`is_access_log` FROM `"+define.TableShort+"` WHERE hash=?", hash)
 }

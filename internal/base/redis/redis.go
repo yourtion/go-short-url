@@ -8,8 +8,11 @@ import (
 )
 
 var log *logger.Entry
+
+// Redis Client
 var Client *redis.Client
 
+// 打开 Redis 连接
 func Open(opts *config.RedisConfig) *redis.Client {
 	log = logger.NewModuleLogger("redis")
 	conf := redis.Options{
@@ -26,6 +29,7 @@ func Open(opts *config.RedisConfig) *redis.Client {
 	return Client
 }
 
+// 获取 Redis Key
 func GetKey(key string) string {
 	if config.Config.Redis.Prefix == "" {
 		return key

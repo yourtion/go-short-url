@@ -19,10 +19,11 @@ func shortHandler(ctx *helper.Context) {
 		ctx.Res.WriteHeader(http.StatusNotFound)
 		ctx.ResponseText("Short not Found: " + short)
 	} else {
-		name := services.BuildCookieKey(shortInfo.Id)
+		name := services.BuildCookieKey(shortInfo.Short)
 		addUv := false
 		if shortInfo.IsStatistics && ctx.GetCookie(name) == nil {
-			ctx.SetCookie(&http.Cookie{Name: name, Value: "1", Path: "/", MaxAge: 3600 * 24})
+			// 使用 Path 策略保证上报的 cookie 数量少
+			ctx.SetCookie(&http.Cookie{Name: name, Value: "1", Path: ctx.Req.URL.Path, MaxAge: 3600 * 24 * 30})
 			addUv = true
 		}
 		sidCookie := ctx.GetCookie(sidKey)

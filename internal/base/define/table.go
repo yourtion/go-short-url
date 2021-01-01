@@ -4,8 +4,13 @@ import (
 	"time"
 )
 
+// 配置表
 var TableConfig string
+
+// 短链映射表
 var TableShort string
+
+// 统计信息表
 var TableStatistic string
 
 type ShortRow struct {

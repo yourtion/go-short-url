@@ -11,12 +11,14 @@ import (
 
 var today = utils.GetTodayDayString()
 
+// 开启循环
 func loop() {
 	defer utils.Try()
 	go taskOnSeconds()
 	go taskOnDayChange()
 }
 
+// 每秒任务
 func taskOnSeconds() {
 	defer utils.Try()
 	for {
@@ -25,9 +27,11 @@ func taskOnSeconds() {
 		services.FlushAccessLog()
 		context.Purge(60)
 	}
+	//goland:noinspection GoUnreachableCode
 	log.Errorln("taskOnSeconds exit")
 }
 
+// 日期变化任务
 func taskOnDayChange() {
 	defer utils.Try()
 	for {
@@ -43,5 +47,6 @@ func taskOnDayChange() {
 		services.SyncToRedis(true)
 		services.SyncToDB(yesterday)
 	}
+	//goland:noinspection GoUnreachableCode
 	log.Errorln("taskOnDayChange exit")
 }

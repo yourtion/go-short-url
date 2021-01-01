@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
-	"sync/atomic"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -13,14 +12,15 @@ import (
 	"github.com/yourtion/go-short-url/internal/base/config"
 	"github.com/yourtion/go-short-url/internal/base/define"
 	"github.com/yourtion/go-short-url/internal/base/logger"
+	"github.com/yourtion/go-short-url/internal/utils"
 )
 
 var DB *sqlx.DB
 var log *logger.Entry
-var queryCounter int64
+var queryCounter utils.AtomicInt
 
-func incrQueueCounter() {
-	atomic.AddInt64(&queryCounter, 1)
+func incrQueueCounter() int64 {
+	return queryCounter.IncrAndGet(1)
 }
 
 // 打开数据库连接
@@ -55,9 +55,9 @@ func Open(opts *config.MySQLConfig) {
 
 // 查询一条数据
 func FindOne(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) (success bool) {
-	incrQueueCounter()
+	counter := incrQueueCounter()
 	var err error
-	log.Debugf("#%d FindOne: %s %+v", queryCounter, query, args)
+	log.Debugf("#%d FindOne: %s %+v", counter, query, args)
 	if tx != nil {
 		err = tx.Get(dest, query, args...)
 	} else {
@@ -65,20 +65,20 @@ func FindOne(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) (
 	}
 	if err != nil {
 		if err != sql.ErrNoRows {
-			log.Warningf("#%d FindOne failed: %s => %s %+v", queryCounter, err, query, args)
+			log.Warningf("#%d FindOne failed: %s => %s %+v", counter, err, query, args)
 		}
-		log.Debugf("#%d FindMany: success=false", queryCounter)
+		log.Debugf("#%d FindMany: success=false", counter)
 		return false
 	}
-	log.Debugf("#%d FindMany: success=true", queryCounter)
+	log.Debugf("#%d FindMany: success=true", counter)
 	return true
 }
 
 // 查询多条数据
 func FindMany(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) (success bool) {
-	incrQueueCounter()
+	counter := incrQueueCounter()
 	var err error
-	log.Debugf("%#d FindMany: %s %+v", queryCounter, query, args)
+	log.Debugf("%d FindMany: %s %+v", counter, query, args)
 	if tx != nil {
 		err = tx.Select(dest, query, args...)
 	} else {
@@ -86,45 +86,45 @@ func FindMany(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) 
 	}
 	if err != nil {
 		if err != sql.ErrNoRows {
-			log.Warningf("#%d FindMany failed: %s => %s %+v", queryCounter, err, query, args)
+			log.Warningf("#%d FindMany failed: %s => %s %+v", counter, err, query, args)
 		}
-		log.Debugf("#%d FindMany: success=false", queryCounter)
+		log.Debugf("#%d FindMany: success=false", counter)
 		return false
 	}
-	log.Debugf("#%d FindMany: success=true", queryCounter)
+	log.Debugf("#%d FindMany: success=true", counter)
 	return true
 }
 
 // 插入一条数据
 func InsertOne(tx *sqlx.Tx, query string, args ...interface{}) (insertId int) {
-	incrQueueCounter()
+	counter := incrQueueCounter()
 	var err error
 	var res sql.Result
-	log.Debugf("#%d InsertOne: %s %+v", queryCounter, query, args)
+	log.Debugf("#%d InsertOne: %s %+v", counter, query, args)
 	if tx != nil {
 		res, err = tx.Exec(query, args...)
 	} else {
 		res, err = DB.Exec(query, args...)
 	}
 	if err != nil {
-		log.Warningf("#%dInsertOne failed: %s => %s %+v", queryCounter, err, query, args)
+		log.Warningf("#%dInsertOne failed: %s => %s %+v", counter, err, query, args)
 		return 0
 	}
 	id, err := res.LastInsertId()
 	if err != nil {
-		log.Warningf("#%d InsertOne failed: %s => %s %+v", queryCounter, err, query, args)
+		log.Warningf("#%d InsertOne failed: %s => %s %+v", counter, err, query, args)
 	}
 	insertId = int(id)
-	log.Debugf("#%d InsertOne: insertId=%d", queryCounter, insertId)
+	log.Debugf("#%d InsertOne: insertId=%d", counter, insertId)
 	return insertId
 }
 
 // 更新多条数据
 func UpdateMany(tx *sqlx.Tx, query string, args ...interface{}) (rowsAffected int) {
-	incrQueueCounter()
+	counter := incrQueueCounter()
 	var err error
 	var res sql.Result
-	log.Debugf("#%d UpdateMany: %s %+v", queryCounter, query, args)
+	log.Debugf("#%d UpdateMany: %s %+v", counter, query, args)
 	if tx != nil {
 		res, err = tx.Exec(query, args...)
 	} else {
@@ -139,14 +139,15 @@ func UpdateMany(tx *sqlx.Tx, query string, args ...interface{}) (rowsAffected in
 		log.Warningf("UpdateMany failed: %s => %s %+v", err, query, args)
 	}
 	rowsAffected = int(rows)
-	log.Debugf("#%d UpdateMany: rowsAffected=%d", queryCounter, rowsAffected)
+	log.Debugf("#%d UpdateMany: rowsAffected=%d", counter, rowsAffected)
 	return rowsAffected
 }
 
 // 更新一条数据
 func UpdateOne(tx *sqlx.Tx, query string, args ...interface{}) (rowsAffected int) {
-	incrQueueCounter()
+	counter := incrQueueCounter()
 	rowsAffected = UpdateMany(tx, query+" LIMIT 1", args...)
+	log.Debugf("#%d UpdateOne: rowsAffected=%d", counter, rowsAffected)
 	return rowsAffected
 }
 
@@ -156,8 +157,10 @@ type queryCountRow struct {
 
 // 查询记录数量，需要 SELECT count(*) AS count FROM ... 这样的格式
 func FindCount(tx *sqlx.Tx, query string, args ...interface{}) (count int, success bool) {
+	counter := incrQueueCounter()
 	row := new(queryCountRow)
 	ok := FindOne(tx, row, query, args...)
+	log.Debugf("#%d FindCount: success=%v", counter, ok)
 	if ok {
 		return row.Count, true
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/yourtion/go-short-url/internal/base/logger"
 	"github.com/yourtion/go-short-url/internal/base/mysql"
 	"github.com/yourtion/go-short-url/internal/base/redis"
+	"github.com/yourtion/go-short-url/internal/controller/admin"
 	"github.com/yourtion/go-short-url/internal/controller/helper"
 	"github.com/yourtion/go-short-url/internal/controller/redirect"
 	"github.com/yourtion/go-short-url/internal/models"
@@ -75,6 +76,7 @@ func Server() *mux.Router {
 	log.Debugf("server prefix: %s", "/")
 	helper.CorsOptions(r, "/api/")
 	redirect.Register(r)
+	admin.Register(r)
 
 	return r
 }

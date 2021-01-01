@@ -8,6 +8,7 @@ import (
 func main() {
 
 	defer func() {
+		// 保证程序退出的时候写入日志
 		services.FlushAccessLog()
 	}()
 

@@ -11,3 +11,5 @@ dev/data
 .idea/dataSources
 .idea/dataSources.xml
 .idea/dataSources.*.xml
+
+scripts/config.toml

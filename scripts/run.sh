@@ -3,4 +3,4 @@
 cd $(dirname "$0")
 set -e
 
-go run short-url/src
+go run ../cmd/short-url/main.go

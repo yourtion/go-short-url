@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 
@@ -24,10 +23,12 @@ func init() {
 	syncLock = sync.Mutex{}
 }
 
-func BuildCookieKey(id int) string {
-	return define.ServiceName + "-" + strconv.Itoa(id)
+// 构建 Cookie 的 key
+func BuildCookieKey(key string) string {
+	return define.ServiceName + "-" + key
 }
 
+// 更新统计信息
 func AddStatisticsInfo(ctx *helper.Context, shortInfo *define.ShortRow, uid string, uv bool) {
 	if shortInfo.IsStatistics {
 		addPvUv(shortInfo.Id, uv)
@@ -37,6 +38,7 @@ func AddStatisticsInfo(ctx *helper.Context, shortInfo *define.ShortRow, uid stri
 	}
 }
 
+// 写入 AccessLog
 func addAccessLog(ctx *helper.Context, shortInfo *define.ShortRow, uid string) {
 	log.Tracef("addAccessLog:%d", shortInfo.Id)
 	ua := ctx.GetUserAgent()
@@ -51,6 +53,7 @@ func addAccessLog(ctx *helper.Context, shortInfo *define.ShortRow, uid string) {
 	}
 }
 
+// 累加本地 PV/UV 信息
 func addPvUv(id int, uv bool) {
 	log.Tracef("addPvUv:%d, %v", id, uv)
 	if val, ok := statics.LoadOrStore(id, new(sInfo)); ok {

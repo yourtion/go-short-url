@@ -36,10 +36,12 @@ func GenerateUid() string {
 	return strconv.FormatInt(v, 36)
 }
 
+// 获取日期字符串
 func GetDayString(t time.Time) string {
 	return t.Format("20060102")
 }
 
+// 获取当前日期字符串
 func GetTodayDayString() string {
 	return GetDayString(time.Now())
 }
