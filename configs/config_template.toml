@@ -1,0 +1,43 @@
+[server]
+# 服务器名字
+name = "local"
+# 监听地址和端口
+listen = "127.0.0.1:3000"
+# 服务器外部访问URL前缀，末尾不包含/
+url = "http://127.0.0.1:3000"
+# 开启pprof调试界面，监听地址和端口，如果去掉此配置项则表示关闭
+pprof = "127.0.0.1:6060"
+
+[log]
+# 日志输出等级，生产环境建议为 info
+level = "trace"
+
+[mysql]
+# MySQL地址
+host = "127.0.0.1"
+# MySQL端口
+port = 3306
+# MySQL数据库名
+database = "wb"
+# MySQL用户名
+user = "root"
+# MySQL密码，base64编码
+password = "123456"
+# MySQL字符集
+charset = "utf8mb4"
+# 表前缀
+prefix = "sus_"
+# 最大连接数
+maxConnections = 100
+# 开启debug输出执行的SQL语句
+debug = true
+
+[redis]
+# Redis地址
+addr = "localhost:6379"
+# Redis 密码
+password = ""
+# Redis 默认数据库
+db = 0
+# Redis 默认前缀
+prefix = "sus"
